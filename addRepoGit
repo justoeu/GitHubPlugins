@@ -1,0 +1,85 @@
+reponame=$1
+username=$2
+token=$3
+
+choisePath=""
+choiseUsername=""
+choiseUserToken=""
+choisePush=""
+
+dirname=`basename $(pwd)`
+
+echo "Init create Repository"
+
+if [ "$reponame" = "" ]; then
+    echo -n "Would you like create Repository using this name: (hit enter to use '$dirname')? (yes/no) "
+    read choisePath
+
+    if [ "$choisePath" = "yes" ]; then
+      reponame=$dirname
+
+    fi
+
+    if [ "$choisePath" = "no" ]; then
+
+      echo -n "Write Repository name to Create: "
+      read reponame
+
+      if [ "$reponame" = "" ]; then
+        echo "The Repository name is necessary!";
+        exit
+      fi
+
+    fi
+
+    if [ "$choisePath" != "yes" ] && [ "$choisePath" != "no" ] || [ "$choisePath" = "" ]; then
+      echo "Repository Name could not null"
+      exit
+    fi
+fi
+
+
+if [ "$username" = "" ]; then
+
+  userGitAtual=`git config --global user.name`
+
+  echo -n "The Username to git what is register in this machine is '$userGitAtual'. Would you like use it? Case not, input the username: "
+  read choiseUsername
+
+  if [ "$choiseUsername" != "" ]; then
+      username=$choiseUsername
+  else
+      username=$userGitAtual
+  fi
+
+fi
+
+if [ "$token" = "" ]; then
+  echo -n "To Access GitHub, you must have the Personal Access Token. Input this Token: "
+  read choiseUserToken
+
+  if [ "$choiseUserToken" = "" ]; then
+    echo "The token is necessary to create a new Repository."
+    exit
+  else
+    token=$choiseUserToken
+  fi
+fi
+
+echo -n "Creating Github repository '$reponame' ..."
+curl -u "$username:$token" https://api.github.com/user/repos -d '{"name":"'$reponame'"}' > /dev/null 2>&1
+echo " done."
+
+echo -n "Would you like push the sources/files to '$reponame'? (yes/no) "
+read choisePush
+
+if [ "$choisePush" = "yes" ]; then
+  echo -n "Pushing local code to remote ..."
+  git remote add origin git@github.com:$username/$reponame.git > /dev/null 2>&1
+  git push -u origin master > /dev/null 2>&1
+  echo " done."
+  exit
+else
+  echo "OK, done."
+  exit
+fi
